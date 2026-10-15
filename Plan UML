@@ -1,0 +1,41 @@
+Main:
+  - standbyGame()
+  - startGame()
+  - endGame()
+  - declareWinner()
+  - Observer de Gamerunner
+
+GameRunner:
+  - verifyWin()
+  - runMatch()
+  - fogController()
+  - Observable
+
+MapConstruction:
+  - placeAnimals()
+  - createMap()
+  - placeCoffees()
+  - setPaths()
+  - setZones()
+  
+Animal:
+  - int energy = 0
+  - int dmg = 1
+  - die()
+  - attack()
+  - move()
+  - observeSurroundings()
+
+  Jugador extends from animal:
+    - int energy = 20
+    - int dmg = 2
+
+  Bot extends from animal:
+    - int energy = 10
+    - int dmg = 1
+
+CoffeCup:
+  - increaseATK()
+  - dissapear()
+  - Podria ser visitor
+
