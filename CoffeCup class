@@ -1,0 +1,12 @@
+package servidor;
+
+public class CoffeCup{
+    public Bot increaseATK (Bot){
+        this.dmg += 1
+    }
+
+    public void dissapear(){
+        System.out.println ("La taza de cafe se consumio")
+    }
+    
+}
