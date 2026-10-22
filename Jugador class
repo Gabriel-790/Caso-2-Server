@@ -1,0 +1,11 @@
+package servidor;
+
+public class jugador extends Animal {
+    @override
+    int dmg = 2
+
+    @override 
+    int energy = 20
+    
+
+}
