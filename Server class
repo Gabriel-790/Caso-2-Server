@@ -13,12 +13,12 @@ public class Server {
     ServerSocket servidor2 = null;
     ServerSocket servidor3 = null;
     ServerSocket servidor4 = null;
-    Socket socket1 = null;
-    Socket socket2 = null;
-    Socket socket3 = null;
-    Socket socket4 = null;
+    Socket socketsv1 = null;
+    Socket socketsv2 = null;
+    Socket socketsv3 = null;
+    Socket socketsv4 = null;
     DataInputStream in;
-    DataOutputStream out;
+    DataOutputStream out; 
 
     final int puerto1 = 6000
     final int puerto2 = 6500
@@ -31,19 +31,19 @@ public class Server {
         System.out.println ("Servidor 1 encendido");
 
         while(true){
-            socket1 = servidor1.accept();
+            socketsv1 = servidor1.accept();
 
             System.out.println ("Partida 1 iniciada")
 
-            in1 = new DataInputStream(socket1.getInputStream());
-            out1 = new DataOutputStream(socket1.getOutputStream());
+            in1 = new DataInputStream(socketsv1.getInputStream());
+            out1 = new DataOutputStream(socketsv1.getOutputStream());
 
             String msgS1 = in1.readUTF()
             System.out.println (msgS1)
 
             out1.writeUTF("Hello Hello")
 
-            socket1.close();
+            socketsv1.close();
             system.out.println ("Partida 1 cerrada")
         }
 
@@ -59,19 +59,19 @@ public class Server {
         System.out.println ("Servidor 2 encendido");
 
         while(true){
-            socket2 = servidor2.accept();
+            socketsv2 = servidor2.accept();
 
             System.out.println ("Partida 2 iniciada")
 
-            in2 = new DataInputStream(socket2.getInputStream());
-            out2 = new DataOutputStream(socket2.getOutputStream());
+            in2 = new DataInputStream(socketsv2.getInputStream());
+            out2 = new DataOutputStream(socketsv2.getOutputStream());
 
             String msgS2 = in2.readUTF()
             System.out.println (msgS2)
 
             out2.writeUTF("Hello Hello")
 
-            socket2.close();
+            socketsv2.close();
             system.out.println ("Partida 2 cerrada")
         }
 
@@ -86,19 +86,19 @@ public class Server {
         System.out.println ("Servidor 3 encendido");
 
         while(true){
-            socket3 = servidor3.accept();
+            socketsv3 = servidor3.accept();
 
             System.out.println ("Partida 3 iniciada")
 
-            in3 = new DataInputStream(socket3.getInputStream());
-            out3 = new DataOutputStream(socket3.getOutputStream());
+            in3 = new DataInputStream(socketsv3.getInputStream());
+            out3 = new DataOutputStream(socketsv3.getOutputStream());
 
             String msgS3 = in3.readUTF()
             System.out.println (msgS3)
 
             out3.writeUTF("Hello Hello")
 
-            socket3.close();
+            socketsv3.close();
             system.out.println ("Partida 3 cerrada")
         }
 
@@ -113,19 +113,19 @@ public class Server {
         System.out.println ("Servidor 4 encendido");
 
         while(true){
-            socket4 = servidor4.accept();
+            socketsv4 = servidor4.accept();
 
             System.out.println ("Partida 4 iniciada")
 
-            in4 = new DataInputStream(socket4.getInputStream());
-            out4 = new DataOutputStream(socket4.getOutputStream());
+            in4 = new DataInputStream(socketsv4.getInputStream());
+            out4 = new DataOutputStream(socketsv4.getOutputStream());
 
             String msgS4 = in4.readUTF()
             System.out.println (msgS4)
 
             out4.writeUTF("Hello Hello")
 
-            socket4.close();
+            socketsv4.close();
             system.out.println ("Partida 4 cerrada")
         }
 
