@@ -39,3 +39,8 @@ CoffeCup:
   - dissapear()
   - Podria ser visitor
 
+Online:
+  - ServerSocket servidor
+  - Puerto
+  - Socket
+
