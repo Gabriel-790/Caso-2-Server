@@ -1,0 +1,9 @@
+package servidor;
+
+public class Bot extends Animal{
+    @override
+    int energy = 10 
+
+    @override 
+    int dmg = 1
+}
