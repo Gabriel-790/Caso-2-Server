@@ -1,0 +1,23 @@
+package servidor;
+
+abstract class Animal{
+    protected int energy = 0
+    protected int dmg = 0
+
+    public void die(){
+        System.out.println ("El animal murio");
+    }
+
+    public void attack(){
+        System.out.println ("El animal ataca a otro animal");
+    }
+
+    public void move(){
+        System.out.println ("El animal se movió");
+    }
+
+    public void observeSurroundings(){
+        System.out.println ("El animal observa sus alrededores.");
+    }
+
+}
