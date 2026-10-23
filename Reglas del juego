@@ -1,0 +1,15 @@
+package servidor;
+
+public final class ReglasDeJuego {
+    public static final int playerPackSize = 20;
+    public static final int botPackSize = 10;
+    public static final int codeLength = 4;
+    public static final int playerInitialDMG = 2;
+    public static final int botInitialDMG = 1;
+    public static final int playerHealth = 20;
+    public static final int botHealth = 10;
+    public static final int flagsPerTeam = 1;
+    public static final int totalPackMatchNumber = 7;
+    public static final int CoffeCupTotalNumber = 10;
+    
+}
