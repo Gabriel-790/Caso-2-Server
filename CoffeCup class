@@ -1,12 +1,7 @@
-package servidor;
+package servidor.entidades;
 
-public class CoffeCup{
-    public Bot increaseATK (Bot){
-        this.dmg += 1
+public class Coffecup extends Item{
+    public Coffecup(int ID, String type, double x, double y) {
+        super(ID, type, true, x, y);
     }
-
-    public void dissapear(){
-        System.out.println ("La taza de cafe se consumio")
-    }
-    
 }
