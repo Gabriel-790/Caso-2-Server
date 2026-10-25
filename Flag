@@ -1,0 +1,16 @@
+package servidor.entidades;
+
+public class Flag extends Item {
+    public Flag(int ID, String type, double x, double y) {
+        super(ID, type, true, x, y);
+    }
+    
+    @Override
+    public void dissapear(){
+        System.out.println ("La bandera se ha recogido");
+        this.x = -1;
+        this.y = -1;
+        this.status = false;
+        //Metodo de gamesession para la victoria del equipo que la recoja 
+    }
+}
