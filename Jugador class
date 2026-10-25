@@ -1,11 +1,32 @@
-package servidor;
+package servidor.entidades;
 
-public class jugador extends Animal {
-    @override
-    int dmg = 2
+public class Jugador extends Animal{
+    protected int PACK_NUMBER = 10;
 
-    @override 
-    int energy = 20
-    
+    public Jugador (int ID, String type, double x, double y, Species speciesInd, Pack group, int energy, boolean lifeState, long tsla, int dmg){
+        super(ID, type, x, y, speciesInd, group, energy, lifeState, tsla, dmg);
+    }
+
+    public void pickup(Item item){
+        if (this.DistanceTo(item) <= Reglas.PICK_UP_RADIUS){
+
+            switch(item.getType()){
+            case "CoffeCup":
+                // Implement logic for picking up a coffee cup
+                group.coffeUP();
+                item.dissapear();
+                break;
+            case "Flag":
+                // Implement logic for picking up a flag
+                break;
+            default:
+                break;
+            }
+         }
+    }
+
+    public int getPackNumber(){
+        return PACK_NUMBER;
+    }
 
 }
