@@ -1,0 +1,25 @@
+package servidor.entidades;
+
+public abstract class Entity{
+    private final int ID;
+    private final String type;
+    protected double x;
+    protected double y;
+
+    //Builder
+    protected Entity (int ID, String type, double x, double y){
+        this.ID = ID;
+        this.type = type;
+        this.x = x;
+        this.y = y;
+    }
+
+    protected double DistanceTo (Entity target){
+        return Math.hypot(x - target.x, y - target.y);
+    }
+
+    protected String getType(){
+        return this.type;
+    }
+
+}
