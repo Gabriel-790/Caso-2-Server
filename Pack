@@ -1,0 +1,49 @@
+package servidor.entidades;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class Pack{
+    public int  entity_id;
+    public int pack_number;
+    public Species animal_type;
+    public int eliminations =  0;
+    public List<Animal> members = new ArrayList<>();
+
+    public Pack(int entity_id, int pack_number, Species animal_type){
+        this.entity_id = entity_id;
+        this.pack_number = pack_number;
+        this.animal_type = animal_type;
+
+        if (pack_number == 10){
+            for (int i = 0; i < pack_number; i++){
+                members.add(new Jugador(entity_id, "Jugador", 0, 0, animal_type, this, Reglas.PLAYER_HEALTH, true, 1000, Reglas.PLAYER_INITIAL_DMG));
+            }
+        } else if (pack_number == 4){
+            for (int i = 0; i < pack_number; i++){
+                members.add(new Bot(entity_id, "Bot", 0, 0, animal_type, this, 10, true, 1000, 1));
+            }
+        }
+    }
+
+    public void attackUP(){
+        this.eliminations += 1; 
+
+        if (this.eliminations >= 2){
+            for (Animal member : members){
+                member.dmgUP();
+
+                if (member.getEnergy() < 20){
+                    member.heal();
+                }
+            }
+
+            this.eliminations = 0;
+        } 
+    }
+
+    public void coffeUP(){
+        for (Animal member : members){
+            member.dmgUP();
+        }
+    }
