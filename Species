@@ -1,0 +1,19 @@
+package servidor.entidades;
+
+public enum Species{
+    JAGUAR ("Jaguar"),
+    PERESOZO ("Peresozo"),
+    YIGUIRRO ("Yigürro"),
+    COLIBRI ("Colibrí"),
+    MANATI ("Manatí"),
+    VENADO ("Venado cola blanca"),
+    TUCAN ("Tucán");
+
+    private final String displayName;
+
+    Species(String displayName) {
+        this.displayName = displayName;
+    }
+
+    public String getDisplayName() { return displayName; }
+}
