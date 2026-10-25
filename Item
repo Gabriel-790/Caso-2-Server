@@ -1,0 +1,16 @@
+package servidor.entidades;
+
+public abstract class Item extends Entity{
+    protected boolean status;
+    
+    public Item (int ID, String type, boolean status, double x, double y){
+        super(ID, type, x, y);
+        this.status = status;
+    }
+
+    public void dissapear(){
+        this.x = -1;
+        this.y = -1;
+        this.status = false;
+    }
+}
