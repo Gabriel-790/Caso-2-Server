@@ -1,0 +1,138 @@
+package Server;
+
+import java.io.IOException;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+
+public class Server {
+    ServerSocket servidor1 = null;
+    ServerSocket servidor2 = null;
+    ServerSocket servidor3 = null;
+    ServerSocket servidor4 = null;
+    Socket socketsv1 = null;
+    Socket socketsv2 = null;
+    Socket socketsv3 = null;
+    Socket socketsv4 = null;
+    DataInputStream in;
+    DataOutputStream out; 
+
+    final int puerto1 = 6000;
+    final int puerto2 = 6500;
+    final int puerto3 = 7000;
+    final int puerto4 = 7500;
+
+    try{
+
+        servidor1 = new ServerSocket(puerto1);
+        System.out.println ("Servidor 1 encendido");
+
+        while(true){
+            socketsv1 = servidor1.accept();
+
+            System.out.println ("Partida 1 iniciada");
+
+            in1 = new DataInputStream(socketsv1.getInputStream());
+            out1 = new DataOutputStream(socketsv1.getOutputStream());
+
+            String msgS1 = in1.readUTF();
+            System.out.println (msgS1);
+
+            out1.writeUTF("Hello Hello");
+
+            socketsv1.close();
+            System.out.println ("Partida 1 cerrada");
+        }
+
+    } catch (IOException ex){
+        Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
+    }
+
+
+
+    try{
+
+        servidor2 = new ServerSocket(puerto2);
+        System.out.println ("Servidor 2 encendido");
+
+        while(true){
+            socketsv2 = servidor2.accept();
+
+            System.out.println ("Partida 2 iniciada");
+
+            in2 = new DataInputStream(socketsv2.getInputStream());
+            out2 = new DataOutputStream(socketsv2.getOutputStream());
+
+            String msgS2 = in2.readUTF();
+            System.out.println (msgS2);
+
+            out2.writeUTF("Hello Hello");
+
+            socketsv2.close();
+            system.out.println ("Partida 2 cerrada");
+        }
+
+    } catch (IOException ex){
+        Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
+    }
+
+
+    try{
+
+        servidor3 = new ServerSocket(puerto3);
+        System.out.println ("Servidor 3 encendido");
+
+        while(true){
+            socketsv3 = servidor3.accept();
+
+            System.out.println ("Partida 3 iniciada");
+
+            in3 = new DataInputStream(socketsv3.getInputStream());
+            out3 = new DataOutputStream(socketsv3.getOutputStream());
+
+            String msgS3 = in3.readUTF();
+            System.out.println (msgS3);
+
+            out3.writeUTF("Hello Hello");
+
+            socketsv3.close();
+            system.out.println ("Partida 3 cerrada");
+        }
+
+    } catch (IOException ex){
+        Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
+    }
+
+
+    try{
+
+        servidor4 = new ServerSocket(puerto4);
+        System.out.println ("Servidor 4 encendido");
+
+        while(true){
+            socketsv4 = servidor4.accept();
+
+            System.out.println ("Partida 4 iniciada");
+
+            in4 = new DataInputStream(socketsv4.getInputStream());
+            out4 = new DataOutputStream(socketsv4.getOutputStream());
+
+            String msgS4 = in4.readUTF();
+            System.out.println (msgS4)
+
+            out4.writeUTF("Hello Hello");
+
+            socketsv4.close();
+            system.out.println ("Partida 4 cerrada");
+        }
+
+    } catch (IOException ex){
+        Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
+    }
+
+
+
+}
