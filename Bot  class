@@ -1,9 +1,15 @@
-package servidor;
+package servidor.entidades;
 
 public class Bot extends Animal{
-    @override
-    int energy = 10 
+    protected int PACK_NUMBER = 4;
 
-    @override 
-    int dmg = 1
+    public Bot (int ID, String type, double x, double y, Species speciesInd, Pack group, int energy, boolean lifeState, long tsla, int dmg){
+        super(ID, type, x, y, speciesInd, group, energy, lifeState, tsla, dmg);
+    }
+
+    public int getPackNumber(){
+        return PACK_NUMBER;
+    }
+
+
 }
