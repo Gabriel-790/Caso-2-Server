@@ -1,15 +1,93 @@
-package servidor;
+package servidor.entidades;
 
-abstract class Animal{
-    protected int energy = 0
-    protected int dmg = 0
+public abstract class Animal extends Entity {
+// tlsa significa "time since last attack"
+    protected int energy;
+    protected boolean lifeState =  true;
+    protected long tsla;
+    protected final Species speciesInd;
+    protected final Pack group;
+    protected boolean atkstance;
+    protected int dmg;
 
-    public void die(){
-        System.out.println ("El animal murio");
+    public Animal (int ID, String type, double x, double y, Species speciesInd, Pack group, int energy, boolean lifeState, long tsla, int dmg){
+        super(ID, type, x, y);
+        this.speciesInd = speciesInd;
+        this.group = group;
+        this.atkstance = false;
+        this.energy = energy;
+        this.lifeState = lifeState;
+        this.tsla = tsla;
+        this.dmg = dmg;
     }
 
-    public void attack(){
-        System.out.println ("El animal ataca a otro animal");
+    public void recievedmg (int dmg){
+        energy = Math.max(0, energy - dmg);
+    }
+
+    protected int getDmg(){
+        return dmg;
+    }
+
+    public void dmgUP(){
+        dmg += 1;
+    }
+
+    public boolean alive(){
+        if (energy <= 0){ 
+            lifeState = false;
+        }
+        return lifeState;
+    }
+
+    public String getEspecie(){
+        return speciesInd.getDisplayName();
+    }
+
+    public int getEnergy(){
+        return energy;
+    }
+
+    public void heal(){
+        this.energy += 1;
+    }
+
+
+    public boolean getLifeState(){
+        return lifeState;
+    }
+
+    public long setLastAttackTime(long now){
+        tsla = now;
+        return tsla;
+    }
+
+    public long getLastAttackTime(){
+        return tsla;
+    }
+
+
+    public boolean atkavailable(long now){
+        if (now - tsla >= Reglas.ATK_CD_MS){
+            atkstance = true;
+        } else {
+            atkstance = false;
+        }
+
+        return atkstance;
+    }
+    
+    public void die(){
+        if (lifeState == false)
+             System.out.println ("Un" + getEspecie() + "murió");
+    }
+
+    public void attack(Animal target){
+        if (atkstance == true){
+            target.recievedmg(getDmg());
+            System.out.println ("El animal atacó a su objetivo");
+        } 
+        
     }
 
     public void move(){
@@ -21,3 +99,4 @@ abstract class Animal{
     }
 
 }
+
