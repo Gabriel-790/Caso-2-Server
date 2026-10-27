@@ -1,0 +1,23 @@
+package servidor;
+
+public class GameSession {
+    private int sessionID;
+    private Bot[] bots;
+    private CoffeCup[] coffeCups;
+
+    MapGraph map = MapLoader.loadFromResource("/map/map.json");
+
+    public GameSession() {
+        this.sessionID = 0; 
+        this.bots = new Bot[Reglas.totalPackMatchNumber];
+        this.coffeCups = new CoffeCup[Reglas.CoffeCupTotalNumber];
+    }
+
+    public void start() {
+        System.out.println("Game session " + sessionID + " started.");
+    }
+
+    public void end() {
+        System.out.println("Game session " + sessionID + " ended.");
+    }
+}
