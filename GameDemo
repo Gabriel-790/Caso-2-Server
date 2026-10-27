@@ -1,0 +1,31 @@
+package servidor;
+
+import java.util.concurrent.TimeUnit;
+import servidor.entidades.*;
+
+public class GameDemo {
+    public static void main(String[] args) throws Exception {
+        GameWorld world = new GameWorld();
+
+        Pack p1 = world.spawnPlayerPack(Species.JAGUAR, Team.PLAYER_1, 0, 0);
+        world.spawnPlayerPack(Species.TUCAN, Team.PLAYER_2, 300, 0);
+        Species[] botSpecies = { Species.PERESOZO, Species.YIGUIRRO, Species.COLIBRI,
+                                 Species.MANATI, Species.VENADO };
+        for (int i = 0; i < botSpecies.length; i++) {
+            world.spawnBotPack(botSpecies[i], 100 + i * 40, 15);
+        }
+
+        world.addFlag(Team.PLAYER_1, "AZUL", -30, 0);
+        world.addFlag(Team.PLAYER_2, "ROJA", 330, 0);
+        for (int i = 1; i <= Reglas.COFFEE_CUP_TOTAL_NUMBER; i++) world.addCup(i * 30, 0);
+
+        world.start();
+
+        Thread.sleep(500);
+        for (Animal a : p1.getMembers()) a.moveTo(330, 0);
+
+        world.awaitEnd(30, TimeUnit.SECONDS);
+        world.stop();
+        world.printSummary();
+    }
+}
