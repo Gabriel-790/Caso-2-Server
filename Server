@@ -54,7 +54,6 @@ public class Server {
 
 
     try{
-
         servidor2 = new ServerSocket(puerto2);
         System.out.println ("Servidor 2 encendido");
 
@@ -81,7 +80,6 @@ public class Server {
 
 
     try{
-
         servidor3 = new ServerSocket(puerto3);
         System.out.println ("Servidor 3 encendido");
 
@@ -132,6 +130,10 @@ public class Server {
     } catch (IOException ex){
         Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
     }
+
+
+
+}
 
 
 
