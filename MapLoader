@@ -1,0 +1,256 @@
+package servidor;
+
+// import com.google.gson.Gson;
+
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+
+public final class MapLoader {
+
+    private static final int EDGE_ARRAY_LENGTH = 2;
+    private static final Pattern NODE_FIELD_PATTERN =
+            Pattern.compile("\"(id|zone)\"\\s*:\\s*(-?\\d+)");
+    private static final Pattern NUMBER_FIELD_PATTERN =
+            Pattern.compile("\"(x|y)\"\\s*:\\s*([-+]?\\d*\\.?\\d+(?:[eE][-+]?\\d+)?)");
+    private static final Pattern EDGE_PATTERN = Pattern.compile("\\[\\s*(-?\\d+)\\s*,\\s*(-?\\d+)\\s*\\]");
+
+    private MapLoader() { }
+
+    /
+    private static final class MapData {
+        List<NodeData> nodes;
+        int[][] edges;
+    }
+
+    private static final class NodeData {
+        int id;
+        int zone;
+        double x;
+        double y;
+    }
+
+    public static MapGraph load(Reader reader) {
+        MapData data = readMapData(reader);
+        if (data == null || data.nodes == null || data.edges == null) {
+            throw new IllegalArgumentException("map.json inválido: faltan 'nodes' o 'edges'");
+        }
+
+        List<MapNode> nodes = new ArrayList<>();
+        for (NodeData n : data.nodes) {
+            nodes.add(new MapNode(n.id, n.zone, n.x, n.y));
+        }
+
+        List<MapGraph.Edge> edges = new ArrayList<>();
+        for (int[] pair : data.edges) {
+            if (pair == null || pair.length != EDGE_ARRAY_LENGTH) {
+                throw new IllegalArgumentException("Cada arista debe tener exactamente 2 nodos");
+            }
+            edges.add(new MapGraph.Edge(pair[0], pair[1]));
+        }
+        return new MapGraph(nodes, edges);
+    }
+
+    private static MapData readMapData(Reader reader) {
+        try {
+            String json = readAll(reader);
+            if (json == null || json.trim().isEmpty()) {
+                throw new IllegalArgumentException("map.json inválido: archivo vacío");
+            }
+
+            String nodesJson = extractArray(json, "nodes");
+            String edgesJson = extractArray(json, "edges");
+
+            MapData data = new MapData();
+            data.nodes = parseNodes(nodesJson);
+            data.edges = parseEdges(edgesJson);
+            return data;
+        } catch (IOException e) {
+            throw new IllegalArgumentException("map.json inválido", e);
+        }
+    }
+
+    private static String readAll(Reader reader) throws IOException {
+        StringBuilder sb = new StringBuilder();
+        char[] buffer = new char[8192];
+        int read;
+        while ((read = reader.read(buffer)) != -1) {
+            sb.append(buffer, 0, read);
+        }
+        return sb.toString();
+    }
+
+    private static String extractArray(String json, String key) {
+        String pattern = "\"" + key + "\"\\s*:\\s*(\\[[\\s\\S]*?\\])";
+        Matcher matcher = Pattern.compile(pattern).matcher(json);
+        if (!matcher.find()) {
+            throw new IllegalArgumentException("map.json inválido: faltan '" + key + "'");
+        }
+        return matcher.group(1);
+    }
+
+    private static List<NodeData> parseNodes(String nodesJson) {
+        if (nodesJson == null || nodesJson.trim().equals("[]")) {
+            return new ArrayList<>();
+        }
+
+        List<NodeData> nodes = new ArrayList<>();
+        String content = nodesJson.substring(1, nodesJson.length() - 1).trim();
+        for (String item : splitTopLevel(content, ',')) {
+            if (item.isEmpty()) {
+                continue;
+            }
+
+            NodeData node = new NodeData();
+            boolean hasId = false;
+            boolean hasZone = false;
+            boolean hasX = false;
+            boolean hasY = false;
+
+            Matcher intMatcher = NODE_FIELD_PATTERN.matcher(item);
+            while (intMatcher.find()) {
+                String field = intMatcher.group(1);
+                int value = Integer.parseInt(intMatcher.group(2));
+                switch (field) {
+                    case "id":
+                        node.id = value;
+                        hasId = true;
+                        break;
+                    case "zone":
+                        node.zone = value;
+                        hasZone = true;
+                        break;
+                    default:
+                        break;
+                }
+            }
+
+            Matcher doubleMatcher = NUMBER_FIELD_PATTERN.matcher(item);
+            while (doubleMatcher.find()) {
+                String field = doubleMatcher.group(1);
+                double value = Double.parseDouble(doubleMatcher.group(2));
+                switch (field) {
+                    case "x":
+                        node.x = value;
+                        hasX = true;
+                        break;
+                    case "y":
+                        node.y = value;
+                        hasY = true;
+                        break;
+                    default:
+                        break;
+                }
+            }
+
+            if (!hasId || !hasZone || !hasX || !hasY) {
+                throw new IllegalArgumentException("map.json inválido: nodo incompleto");
+            }
+            nodes.add(node);
+        }
+
+        return nodes;
+    }
+
+    private static int[][] parseEdges(String edgesJson) {
+        if (edgesJson == null || edgesJson.trim().equals("[]")) {
+            return new int[0][];
+        }
+
+        List<int[]> pairs = new ArrayList<>();
+        Matcher matcher = EDGE_PATTERN.matcher(edgesJson);
+        while (matcher.find()) {
+            pairs.add(new int[] {
+                    Integer.parseInt(matcher.group(1)),
+                    Integer.parseInt(matcher.group(2))
+            });
+        }
+
+        int[][] result = new int[pairs.size()][EDGE_ARRAY_LENGTH];
+        for (int i = 0; i < pairs.size(); i++) {
+            result[i] = pairs.get(i);
+        }
+        return result;
+    }
+
+    private static List<String> splitTopLevel(String value, char separator) {
+        List<String> parts = new ArrayList<>();
+        StringBuilder current = new StringBuilder();
+        int depth = 0;
+        boolean inString = false;
+        char previous = 0;
+
+        for (int i = 0; i < value.length(); i++) {
+            char ch = value.charAt(i);
+
+            if (inString) {
+                current.append(ch);
+                if (ch == '"' && previous != '\\') {
+                    inString = false;
+                }
+                previous = ch;
+                continue;
+            }
+
+            if (ch == '"') {
+                inString = true;
+                current.append(ch);
+                previous = ch;
+                continue;
+            }
+
+            if (ch == '[' || ch == '{') {
+                depth++;
+                current.append(ch);
+                previous = ch;
+                continue;
+            }
+
+            if (ch == ']' || ch == '}') {
+                if (depth > 0) {
+                    depth--;
+                }
+                current.append(ch);
+                previous = ch;
+                continue;
+            }
+
+            if (ch == separator && depth == 0) {
+                String part = current.toString().trim();
+                if (!part.isEmpty()) {
+                    parts.add(part);
+                }
+                current.setLength(0);
+                previous = ch;
+                continue;
+            }
+
+            current.append(ch);
+            previous = ch;
+        }
+
+        String tail = current.toString().trim();
+        if (!tail.isEmpty()) {
+            parts.add(tail);
+        }
+        return parts;
+    }
+
+    /** Carga desde el classpath, por ejemplo "/map/map.json" en src/main/resources. */
+    public static MapGraph loadFromResource(String resourcePath) throws IOException {
+        try (InputStream in = MapLoader.class.getResourceAsStream(resourcePath)) {
+            if (in == null) {
+                throw new FileNotFoundException("No se encontró el recurso: " + resourcePath);
+            }
+            return load(new InputStreamReader(in, StandardCharsets.UTF_8));
+        }
+    }
+}
