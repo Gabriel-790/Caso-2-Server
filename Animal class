@@ -1,102 +1,118 @@
 package servidor.entidades;
 
-public abstract class Animal extends Entity {
-// tlsa significa "time since last attack"
-    protected int energy;
-    protected boolean lifeState =  true;
-    protected long tsla;
-    protected final Species speciesInd;
+import java.util.concurrent.atomic.AtomicInteger;
+
+
+public abstract class Animal extends Entity implements Runnable {
+
+    protected final Species species;
+    public final Team team;
     protected final Pack group;
-    protected boolean atkstance;
-    protected int dmg;
+    protected final Arena world;
 
-    public Animal (int ID, String type, double x, double y, Species speciesInd, Pack group, int energy, boolean lifeState, long tsla, int dmg){
-        super(ID, type, x, y);
-        this.speciesInd = speciesInd;
+    private final int maxEnergy;
+    private final AtomicInteger energy;
+    private final AtomicInteger dmg;
+    private volatile long lastAttackAt = 0;
+    private volatile boolean running = true;
+
+    private volatile double destX, destY;
+    private volatile boolean hasDestination;
+
+    protected volatile Animal manualTarget;
+
+    public Animal (int ID, Species species, Team team, Pack group,
+                   double x, double y, int energy, int dmg, Arena world){
+        super(ID, "animal", x, y);
+        this.species = species;
+        this.team = team;
         this.group = group;
-        this.atkstance = false;
-        this.energy = energy;
-        this.lifeState = lifeState;
-        this.tsla = tsla;
-        this.dmg = dmg;
+        this.world = world;
+        this.maxEnergy = energy;
+        this.energy = new AtomicInteger(energy);
+        this.dmg = new AtomicInteger(dmg);
     }
 
-    public void recievedmg (int dmg){
-        energy = Math.max(0, energy - dmg);
-    }
 
-    protected int getDmg(){
-        return dmg;
-    }
+    public String getName(){ return species.getDisplayName(); }
+    public Species getSpecies(){ return species; }
+    public Pack getGroup(){ return group; }
 
-    public void dmgUP(){
-        dmg += 1;
-    }
+    public boolean lifeState() { return getEnergy() > 0; }
 
-    public boolean alive(){
-        if (energy <= 0){ 
-            lifeState = false;
-        }
-        return lifeState;
-    }
+    public int getEnergy(){ return energy.get(); }
 
-    public String getEspecie(){
-        return speciesInd.getDisplayName();
-    }
+    public int getDmg(){ return dmg.get(); }
 
-    public int getEnergy(){
-        return energy;
-    }
+    public void dmgUP(){ dmg.incrementAndGet(); }
+
 
     public void heal(){
-        this.energy += 1;
+        energy.updateAndGet(v -> v > 0 ? Math.min(maxEnergy, v + 1) : v);
     }
 
 
-    public boolean getLifeState(){
-        return lifeState;
-    }
-
-    public long setLastAttackTime(long now){
-        tsla = now;
-        return tsla;
-    }
-
-    public long getLastAttackTime(){
-        return tsla;
+    public boolean recievedmg (int dmg){
+        int before = energy.getAndUpdate(v -> Math.max(0, v - dmg));
+        return before > 0 && before - dmg <= 0;
     }
 
 
-    public boolean atkavailable(long now){
-        if (now - tsla >= Reglas.ATK_CD_MS){
-            atkstance = true;
-        } else {
-            atkstance = false;
+    public void moveTo(double tx, double ty) { destX = tx; destY = ty; hasDestination = true; }
+
+    public void attack(Animal target) { manualTarget = target; }
+
+    public void stop() { running = false; }
+
+    protected void stopMoving() { hasDestination = false; }
+
+    protected boolean isMoving() { return hasDestination; }
+
+
+    protected abstract void behave();
+
+    protected void afterStep() { }
+
+    @Override
+    public void run() {
+        long last = System.nanoTime();
+        try {
+            while (running && lifeState() && !world.isOver()
+                    && !Thread.currentThread().isInterrupted()) {
+                long now = System.nanoTime();
+                double dt = (now - last) / 1_000_000_000.0;
+                last = now;
+
+                behave();
+                step(dt);
+                afterStep();
+                Thread.sleep(Reglas.TICK_MS);   
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        } finally {
+            world.onAnimalExit(this);
         }
-
-        return atkstance;
-    }
-    
-    public void die(){
-        if (lifeState == false)
-             System.out.println ("Un" + getEspecie() + "murió");
     }
 
-    public void attack(Animal target){
-        if (atkstance == true){
-            target.recievedmg(getDmg());
-            System.out.println ("El animal atacó a su objetivo");
-        } 
-        
+    private void step(double dt) {
+        if (!hasDestination) return;
+        double dx = destX - x, dy = destY - y;
+        double dist = Math.hypot(dx, dy);
+        double move = Reglas.ANIMAL_SPEED * dt;
+        if (dist <= move) { x = destX; y = destY; hasDestination = false; return; }
+        x += dx / dist * move;
+        y += dy / dist * move;
     }
 
-    public void move(){
-        System.out.println ("El animal se movió");
+    protected void tryAttack(Animal target) {
+        long now = System.currentTimeMillis();
+        if (now - lastAttackAt < Reglas.ATK_CD_MS) return;
+        lastAttackAt = now;
+        boolean killed = target.recievedmg(getDmg());
+        world.log(getName() + "#" + getId() + " golpea a " + target.getName() + "#" + target.getId()
+                + " (energia " + target.getEnergy() + ")");
+        if (killed) world.onKill(this, target);
     }
-
-    public void observeSurroundings(){
-        System.out.println ("El animal observa sus alrededores.");
-    }
-
 }
 
