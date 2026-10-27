@@ -1,0 +1,16 @@
+package servidor.entidades;
+
+public interface Arena {
+
+    boolean isOver();
+
+    Animal nearestPlayerAnimal(Animal from, double radius);
+
+    void playerStepped(Jugador player);
+
+    void onKill(Animal killer, Animal victim);
+
+    void onAnimalExit(Animal animal);
+
+    void log(String msg);
+}
