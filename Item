@@ -1,16 +1,22 @@
 package servidor.entidades;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 public abstract class Item extends Entity{
-    protected boolean status;
+    public AtomicBoolean taken;
     
-    public Item (int ID, String type, boolean status, double x, double y){
+    public Item (int ID, String type, boolean taken, double x, double y){
         super(ID, type, x, y);
-        this.status = status;
+        this.taken = new AtomicBoolean(taken);
     }
 
     public void dissapear(){
         this.x = -1;
         this.y = -1;
-        this.status = false;
+        this.taken.set(true);
+    }
+
+    public boolean isTaken(){
+        return this.taken.get();
     }
 }
