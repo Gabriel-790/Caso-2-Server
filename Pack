@@ -1,49 +1,38 @@
 package servidor.entidades;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
-public class Pack{
-    public int  entity_id;
-    public int pack_number;
-    public Species animal_type;
-    public int eliminations =  0;
-    public List<Animal> members = new ArrayList<>();
 
-    public Pack(int entity_id, int pack_number, Species animal_type){
-        this.entity_id = entity_id;
-        this.pack_number = pack_number;
-        this.animal_type = animal_type;
+public class Pack {
+    private final Species species;
+    private final Team team;
+    private final List<Animal> members = new CopyOnWriteArrayList<>();
 
-        if (pack_number == 10){
-            for (int i = 0; i < pack_number; i++){
-                members.add(new Jugador(entity_id, "Jugador", 0, 0, animal_type, this, Reglas.PLAYER_HEALTH, true, 1000, Reglas.PLAYER_INITIAL_DMG));
-            }
-        } else if (pack_number == 4){
-            for (int i = 0; i < pack_number; i++){
-                members.add(new Bot(entity_id, "Bot", 0, 0, animal_type, this, 10, true, 1000, 1));
-            }
-        }
+    public Pack(Species species, Team team) {
+        this.species = species;
+        this.team = team;
     }
 
-    public void attackUP(){
-        this.eliminations += 1; 
+    public void add(Animal a) { members.add(a); }
 
-        if (this.eliminations >= 2){
-            for (Animal member : members){
-                member.dmgUP();
+    public Species getSpecies() { return species; }
+    public Team getTeam() { return team; }
+    public List<Animal> getMembers() { return Collections.unmodifiableList(members); }
 
-                if (member.getEnergy() < 20){
-                    member.heal();
-                }
-            }
-
-            this.eliminations = 0;
-        } 
+    public int aliveCount() {
+        int n = 0;
+        for (Animal a : members) if (a.lifeState()) n++;
+        return n;
     }
 
-    public void coffeUP(){
-        for (Animal member : members){
-            member.dmgUP();
-        }
+    public void coffeUP() {
+        for (Animal a : members) if (a.lifeState()) a.dmgUP();
     }
+
+    public void healAll() {
+        for (Animal a : members) if (a.lifeState()) a.heal();
+    }
+}
+
