@@ -1,0 +1,147 @@
+package servidor;
+
+import java.util.*;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.*;
+import servidor.entidades.*;
+
+public class GameWorld implements Arena {
+    private final List<Animal> animals = new CopyOnWriteArrayList<>();
+    private final List<Pack> playerPacks = new CopyOnWriteArrayList<>();
+    private final AtomicInteger ids = new AtomicInteger();
+    private final AtomicInteger botsKilled = new AtomicInteger();
+    private final Map<Team, AtomicInteger> lost = new EnumMap<>(Team.class);
+    private final ExecutorService pool = Executors.newCachedThreadPool();
+    private final long startTime = System.currentTimeMillis();
+
+    private final List<Coffecup> cups = new CopyOnWriteArrayList<>();
+    private final Map<Team, Flag> flags = new EnumMap<>(Team.class);
+    private final Map<Team, AtomicInteger> cupsCollected = new EnumMap<>(Team.class);
+    private final AtomicReference<Team> winner = new AtomicReference<>();
+    private final CountDownLatch endLatch = new CountDownLatch(1);
+    private volatile long endTime;
+
+    public GameWorld() {
+        for (Team t : Team.values()) {
+            lost.put(t, new AtomicInteger());
+            cupsCollected.put(t, new AtomicInteger());
+        }
+    }
+
+
+    public Pack spawnPlayerPack(Species species, Team team, double x, double y) {
+        Pack pack = new Pack(species, team);
+        for (int i = 0; i < Reglas.PLAYER_PACK_SIZE; i++) {
+            Animal a = new Jugador(ids.incrementAndGet(), species, team, pack,
+                    x + (i % 5) * 5, y + (i / 5) * 5, this);
+            pack.add(a);
+            animals.add(a);
+        }
+        playerPacks.add(pack);
+        return pack;
+    }
+
+    public Pack spawnBotPack(Species species, double x, double y) {
+        Pack pack = new Pack(species, Team.BOT);
+        for (int i = 0; i < Reglas.BOT_PACK_SIZE; i++) {
+            Animal a = new Bot(ids.incrementAndGet(), species, pack,
+                    x + (i % 2) * 5, y + (i / 2) * 5, this);
+            pack.add(a);
+            animals.add(a);
+        }
+        return pack;
+    }
+
+    public void addCup(double x, double y) {
+        cups.add(new Coffecup(ids.incrementAndGet(), "coffeecup", x, y));
+    }
+
+    public void addFlag(Team owner, String color, double x, double y) {
+        flags.put(owner, new Flag(ids.incrementAndGet(), "flag", owner, color, x, y));
+    }
+
+
+    public void start() {
+        for (Animal a : animals) pool.execute(a);
+    }
+
+    public void stop() throws InterruptedException {
+        animals.forEach(Animal::stop);
+        pool.shutdown();
+        if (!pool.awaitTermination(2, TimeUnit.SECONDS)) pool.shutdownNow();
+    }
+
+    public void awaitEnd(long timeout, TimeUnit unit) throws InterruptedException {
+        endLatch.await(timeout, unit);
+    }
+
+    public Team getWinner() { return winner.get(); }
+    public int getBotsKilled() { return botsKilled.get(); }
+    public int getCupsCollected(Team team) { return cupsCollected.get(team).get(); }
+    public List<Animal> getAnimals() { return Collections.unmodifiableList(animals); }
+
+    @Override
+    public boolean isOver() { return winner.get() != null; }
+
+    @Override
+    public Animal nearestPlayerAnimal(Animal from, double radius) {
+        Animal best = null; double bestD = radius;
+        for (Animal a : animals) {
+            if (a.team == Team.BOT || !a.lifeState()) continue;
+            double d = from.distanceTo(a);
+            if (d <= bestD) { bestD = d; best = a; }
+        }
+        return best;
+    }
+
+    @Override
+    public void playerStepped(Jugador j) {
+        for (Coffecup c : cups) {
+            if (c.isTaken()) continue;
+            if (j.pickup(c)) {
+                int total = cupsCollected.get(j.team).incrementAndGet();
+                log(j.getName() + "#" + j.getId() + " recoge una taza de cafe -> manada " + j.team
+                        + " ahora hace " + j.getDmg() + " de dano (tazas: " + total + ")");
+            }
+        }
+        for (Flag f : flags.values()) {
+            if (f.owner == j.team) continue;                       
+            if (j.distanceTo(f) > Reglas.PICK_UP_RADIUS) continue;
+            if (winner.compareAndSet(null, j.team)) {
+                endTime = System.currentTimeMillis();
+                log(j.getName() + "#" + j.getId() + " toca la bandera " + f.color + " -> GANA " + j.team);
+                endLatch.countDown();
+            }
+            return;
+        }
+    }
+
+    @Override
+    public void onKill(Animal killer, Animal victim) {
+        if (victim.team != Team.BOT) return;
+        if (botsKilled.incrementAndGet() % 2 == 0) {
+            playerPacks.forEach(Pack::healAll);
+        }
+    }
+
+    @Override
+    public void onAnimalExit(Animal a) {
+        if (!a.lifeState()) lost.get(a.team).incrementAndGet();
+    }
+
+
+    @Override
+    public void log(String msg) {
+        System.out.println("[" + (System.currentTimeMillis() - startTime) + " ms] " + msg);
+    }
+
+    public void printSummary() {
+        System.out.println("\n=== RESUMEN ===");
+        System.out.println("Ganador: " + (winner.get() == null ? "nadie" : winner.get()));
+        System.out.println("Bots eliminados: " + botsKilled.get());
+        lost.forEach((t, n) -> System.out.println("Animales perdidos " + t + ": " + n.get()));
+        cupsCollected.forEach((t, n) -> { if (t != Team.BOT) System.out.println("Tazas de " + t + ": " + n.get()); });
+        long end = endTime != 0 ? endTime : System.currentTimeMillis();
+        System.out.println("Duracion: " + (end - startTime) + " ms");
+    }
+}
