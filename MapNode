@@ -1,0 +1,14 @@
+package servidor;
+
+import java.awt.geom.Point2D;
+
+public record MapNode(int id, int zone, double x, double y) {
+
+    public Point2D toPoint() {
+        return new Point2D.Double(x, y);
+    }
+
+    public double distanceTo(MapNode other) {
+        return Math.hypot(x - other.x, y - other.y);
+    }
+}
