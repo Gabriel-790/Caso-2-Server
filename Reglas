@@ -2,13 +2,13 @@ package servidor.entidades;
 
 import java.util.List;
 
-public final class Reglas {
-    public static final int PLAYER_PACK_SIZE = 20;
+public class Reglas {
+    public static final int PLAYER_PACK_SIZE = 10;
     public static final int BOT_PACK_SIZE = 4;
     public static final int CODE_LENGTH = 4;
     public static int PLAYER_INITIAL_DMG = 2;
     public static int BOT_INITIAL_DMG = 1;
-    public static final int PLAYER_HEALTH = 20;
+    public static int PLAYER_HEALTH = 20;
     public static final int BOT_HEALTH = 10;
     public static final int FLAGS_PER_TEAM = 1;
     public static final int TOTAL_PACK_MATCH_NUMBER = 7;
@@ -17,4 +17,6 @@ public final class Reglas {
     public static final List<String> animales = List.of("Tucán", "Jaguar", "Peresozo", "Yigürro", "Venado Cola Blanca", "Manatí","Colibrí");
     public static final double PICK_UP_RADIUS = 40.00;
     public static final double ATTACK_RADIUS = 20.00;
+    public static final long TICK_MS = 50;           
+    public static final double ANIMAL_SPEED = 40.0;   
 }
