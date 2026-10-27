@@ -1,0 +1,186 @@
+package servidor;
+
+import java.awt.geom.Point2D;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Deque;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.Optional;
+import java.util.Random;
+import java.util.Set;
+import java.util.TreeSet;
+
+
+public class MapGraph {
+
+    /** Arista no dirigida entre dos nodos. */
+    public record Edge(int a, int b) { }
+
+    public record SnapResult(Edge edge, double t, Point2D point, double distance) { }
+
+    private final Map<Integer, MapNode> nodes = new LinkedHashMap<>();
+    private final Map<Integer, List<Integer>> adjacency = new HashMap<>();
+    private final List<Edge> edges = new ArrayList<>();
+
+    public MapGraph(Collection<MapNode> nodeList, Collection<Edge> edgeList) {
+        for (MapNode node : nodeList) {
+            if (nodes.putIfAbsent(node.id(), node) != null) {
+                throw new IllegalArgumentException("Nodo duplicado: " + node.id());
+            }
+            adjacency.put(node.id(), new ArrayList<>());
+        }
+        for (Edge edge : edgeList) {
+            requireNode(edge.a());
+            requireNode(edge.b());
+            if (edge.a() == edge.b()) {
+                throw new IllegalArgumentException("Arista a sí misma: " + edge.a());
+            }
+            if (adjacency.get(edge.a()).contains(edge.b())) {
+                continue; // arista repetida: se ignora
+            }
+            adjacency.get(edge.a()).add(edge.b());
+            adjacency.get(edge.b()).add(edge.a());
+            edges.add(edge);
+        }
+    }
+
+
+    public MapNode getNode(int id) {
+        return requireNode(id);
+    }
+
+    public Collection<MapNode> getNodes() {
+        return Collections.unmodifiableCollection(nodes.values());
+    }
+
+    public List<Edge> getEdges() {
+        return Collections.unmodifiableList(edges);
+    }
+
+    public List<Integer> neighbors(int id) {
+        requireNode(id);
+        return Collections.unmodifiableList(adjacency.get(id));
+    }
+
+    public List<MapNode> nodesInZone(int zone) {
+        List<MapNode> result = new ArrayList<>();
+        for (MapNode node : nodes.values()) {
+            if (node.zone() == zone) {
+                result.add(node);
+            }
+        }
+        return result;
+    }
+
+
+    public Set<Integer> zones() {
+        Set<Integer> result = new TreeSet<>();
+        for (MapNode node : nodes.values()) {
+            result.add(node.zone());
+        }
+        return result;
+    }
+
+    public double edgeLength(Edge edge) {
+        return nodes.get(edge.a()).distanceTo(nodes.get(edge.b()));
+    }
+
+    /** Punto de la arista en la posición t (0 = nodo a, 1 = nodo b). */
+    public Point2D pointAt(Edge edge, double t) {
+        MapNode a = nodes.get(edge.a());
+        MapNode b = nodes.get(edge.b());
+        return new Point2D.Double(a.x() + t * (b.x() - a.x()), a.y() + t * (b.y() - a.y()));
+    }
+
+    public boolean isConnected() {
+        if (nodes.isEmpty()) {
+            return false;
+        }
+        int start = nodes.keySet().iterator().next();
+        Set<Integer> visited = new HashSet<>();
+        Deque<Integer> queue = new ArrayDeque<>();
+        queue.add(start);
+        visited.add(start);
+        while (!queue.isEmpty()) {
+            int current = queue.poll();
+            for (int next : adjacency.get(current)) {
+                if (visited.add(next)) {
+                    queue.add(next);
+                }
+            }
+        }
+        return visited.size() == nodes.size();
+    }
+
+    public Optional<SnapResult> snap(Point2D p, double maxDistance) {
+        SnapResult best = null;
+        for (Edge edge : edges) {
+            SnapResult candidate = project(edge, p);
+            if (best == null || candidate.distance() < best.distance()) {
+                best = candidate;
+            }
+        }
+        if (best == null || best.distance() > maxDistance) {
+            return Optional.empty();
+        }
+        return Optional.of(best);
+    }
+
+    private SnapResult project(Edge edge, Point2D p) {
+        MapNode a = nodes.get(edge.a());
+        MapNode b = nodes.get(edge.b());
+        double abx = b.x() - a.x();
+        double aby = b.y() - a.y();
+        double len2 = abx * abx + aby * aby;
+        double t = len2 == 0 ? 0 : ((p.getX() - a.x()) * abx + (p.getY() - a.y()) * aby) / len2;
+        t = Math.max(0, Math.min(1, t));
+        Point2D projected = new Point2D.Double(a.x() + t * abx, a.y() + t * aby);
+        return new SnapResult(edge, t, projected, p.distance(projected));
+    }
+
+    
+    public SnapResult randomPointOnPaths(Random random) {
+        if (edges.isEmpty()) {
+            throw new NoSuchElementException("El mapa no tiene caminos");
+        }
+        double total = 0;
+        for (Edge edge : edges) {
+            total += edgeLength(edge);
+        }
+        double target = random.nextDouble() * total;
+        double accumulated = 0;
+        Edge chosen = edges.get(edges.size() - 1);
+        for (Edge edge : edges) {
+            accumulated += edgeLength(edge);
+            if (target <= accumulated) {
+                chosen = edge;
+                break;
+            }
+        }
+        double t = random.nextDouble();
+        return new SnapResult(chosen, t, pointAt(chosen, t), 0);
+    }
+
+    public MapNode randomNodeInZone(int zone, Random random) {
+        List<MapNode> inZone = nodesInZone(zone);
+        if (inZone.isEmpty()) {
+            throw new NoSuchElementException("La zona " + zone + " no tiene nodos");
+        }
+        return inZone.get(random.nextInt(inZone.size()));
+    }
+
+    private MapNode requireNode(int id) {
+        MapNode node = nodes.get(id);
+        if (node == null) {
+            throw new IllegalArgumentException("Nodo inexistente: " + id);
+        }
+        return node;
+    }
+}
