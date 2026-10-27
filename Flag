@@ -1,8 +1,14 @@
 package servidor.entidades;
 
 public class Flag extends Item {
-    public Flag(int ID, String type, double x, double y) {
+
+    public final Team owner;
+    public final String color;
+
+    public Flag(int ID, String type, Team owner, String color, double x, double y) {
         super(ID, type, true, x, y);
+        this.owner = owner;
+        this.color = color;
     }
     
     @Override
@@ -10,7 +16,7 @@ public class Flag extends Item {
         System.out.println ("La bandera se ha recogido");
         this.x = -1;
         this.y = -1;
-        this.status = false;
+        this.taken.set(false);
         //Metodo de gamesession para la victoria del equipo que la recoja 
     }
 }
