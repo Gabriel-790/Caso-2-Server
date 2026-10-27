@@ -1,12 +1,11 @@
 package servidor.entidades;
 
-public abstract class Entity{
+public abstract class Entity {
     private final int ID;
     private final String type;
-    protected double x;
-    protected double y;
+    public volatile double x;
+    public volatile double y;
 
-    //Builder
     protected Entity (int ID, String type, double x, double y){
         this.ID = ID;
         this.type = type;
@@ -14,12 +13,17 @@ public abstract class Entity{
         this.y = y;
     }
 
-    protected double DistanceTo (Entity target){
+    public double distanceTo (Entity target){
         return Math.hypot(x - target.x, y - target.y);
     }
 
-    protected String getType(){
+    public int getId(){
+        return this.ID;
+    }
+
+    public String getType(){
         return this.type;
     }
 
 }
+
