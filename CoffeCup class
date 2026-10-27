@@ -2,6 +2,6 @@ package servidor.entidades;
 
 public class Coffecup extends Item{
     public Coffecup(int ID, String type, double x, double y) {
-        super(ID, type, true, x, y);
+        super(ID, type, false, x, y);
     }
 }
