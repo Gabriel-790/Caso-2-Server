@@ -1,32 +1,41 @@
 package servidor.entidades;
 
 public class Jugador extends Animal{
-    protected int PACK_NUMBER = 10;
 
-    public Jugador (int ID, String type, double x, double y, Species speciesInd, Pack group, int energy, boolean lifeState, long tsla, int dmg){
-        super(ID, type, x, y, speciesInd, group, energy, lifeState, tsla, dmg);
-    }
-
-    public void pickup(Item item){
-        if (this.DistanceTo(item) <= Reglas.PICK_UP_RADIUS){
-
-            switch(item.getType()){
-            case "CoffeCup":
-                // Implement logic for picking up a coffee cup
-                group.coffeUP();
-                item.dissapear();
-                break;
-            case "Flag":
-                // Implement logic for picking up a flag
-                break;
-            default:
-                break;
-            }
-         }
+    public Jugador (int ID, Species species, Team team, Pack group, double x, double y, Arena world){
+        super(ID, species, team, group, x, y, Reglas.PLAYER_HEALTH, Reglas.PLAYER_INITIAL_DMG, world);
     }
 
     public int getPackNumber(){
-        return PACK_NUMBER;
+        return Reglas.PLAYER_PACK_SIZE;
     }
 
+    
+    public boolean pickup(Item item){
+        if (!(item instanceof Coffecup)) return false;
+        if (this.distanceTo(item) > Reglas.PICK_UP_RADIUS) return false;
+        if (!item.taken.compareAndSet(false, true)) return false;   // otro hilo llego primero
+        item.dissapear();
+        group.coffeUP();
+        return true;
+    }
+
+
+    @Override
+    protected void behave() {
+        Animal t = manualTarget;
+        if (t == null) return;
+        if (!t.lifeState()) { manualTarget = null; return; }
+        if (distanceTo(t) <= Reglas.ATTACK_RADIUS) {
+            stopMoving();
+            tryAttack(t);
+        } else {
+            moveTo(t.x, t.y);   
+        }
+    }
+
+    @Override
+    protected void afterStep() {
+        world.playerStepped(this);   
+    }
 }
