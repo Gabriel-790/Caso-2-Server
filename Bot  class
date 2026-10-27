@@ -1,15 +1,29 @@
 package servidor.entidades;
 
-public class Bot extends Animal{
-    protected int PACK_NUMBER = 4;
+import java.util.concurrent.ThreadLocalRandom;
 
-    public Bot (int ID, String type, double x, double y, Species speciesInd, Pack group, int energy, boolean lifeState, long tsla, int dmg){
-        super(ID, type, x, y, speciesInd, group, energy, lifeState, tsla, dmg);
+public class Bot extends Animal{
+
+    public Bot (int ID, Species species, Pack group, double x, double y, Arena world){
+        super(ID, species, Team.BOT, group, x, y, Reglas.BOT_HEALTH, Reglas.BOT_INITIAL_DMG, world);
     }
 
     public int getPackNumber(){
-        return PACK_NUMBER;
+        return Reglas.BOT_PACK_SIZE;
     }
 
-
+    @Override
+    protected void behave() {
+        Animal enemy = world.nearestPlayerAnimal(this, Reglas.ATTACK_RADIUS);
+        if (enemy != null) {
+            stopMoving();
+            tryAttack(enemy);
+            return;
+        }
+        if (!isMoving()) {
+            ThreadLocalRandom r = ThreadLocalRandom.current();
+            moveTo(x + r.nextDouble(-80, 80), y + r.nextDouble(-80, 80));
+        }
+    }
 }
+
